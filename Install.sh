@@ -88,7 +88,7 @@ if [[ "$OS" =~ "Ubuntu" ]]; then #Ubuntu 20.04+ are supported
 fi
 
 ## Read input arguments
-while getopts "u:p:c:q:l:rbvx3oh" opt; do
+while getopts "u:p:c:q:l:rbvxyz3oh" opt; do
   case ${opt} in
 	u ) # process option username
 		username=${OPTARG}
@@ -136,6 +136,14 @@ while getopts "u:p:c:q:l:rbvx3oh" opt; do
 	x ) # process option bbr
 		unset bbrv3_install
 		bbrx_install=1	  
+		;;
+  	y ) # process option bbr
+		unset bbrv3_install
+		bbry_install=1	  
+		;;
+	z ) # process option bbr
+		unset bbrv3_install
+		bbrz_install=1	  
 		;;
 	3 ) # process option bbr
 		unset bbrx_install
@@ -346,7 +354,7 @@ install_ set_file_open_limit_ "Setting File Open Limit" "/tmp/file_open_limit_er
 systemd-detect-virt > /dev/null
 if [ $? -eq 0 ]; then
 	warn "Virtualization is detected, skipping some of the tunning"
-	install_ disable_tso_ "Disabling TSO" "/tmp/tso_error" tso_success
+	#install_ disable_tso_ "Disabling TSO" "/tmp/tso_error" tso_success
 else
 	install_ set_disk_scheduler_ "Setting Disk Scheduler" "/tmp/disk_scheduler_error" disk_scheduler_success
 	install_ set_ring_buffer_ "Setting Ring Buffer" "/tmp/ring_buffer_error" ring_buffer_success
@@ -354,7 +362,8 @@ fi
 install_ set_initial_congestion_window_ "Setting Initial Congestion Window" "/tmp/initial_congestion_window_error" initial_congestion_window_success
 install_ kernel_settings_ "Setting Kernel Settings" "/tmp/kernel_settings_error" kernel_settings_success
 
-
+info "Delay 10 seconds"
+sleep 10s
 
 # BBRx
 if [[ ! -z "$bbrx_install" ]]; then
@@ -363,6 +372,24 @@ if [[ ! -z "$bbrx_install" ]]; then
 		warn echo "Tweaked BBR is already installed"
 	else
 		install_ install_bbrx_ "Installing BBRx" "/tmp/bbrx_error" bbrx_install_success
+	fi
+fi
+
+if [[ ! -z "$bbry_install" ]]; then
+	# Check if Tweaked BBR is already installed
+	if [[ ! -z "$(lsmod | grep bbry)" ]]; then
+		warn echo "Tweaked BBR is already installed"
+	else
+		install_ install_bbry_ "Installing BBRy" "/tmp/bbry_error" bbry_install_success
+	fi
+fi
+
+if [[ ! -z "$bbrz_install" ]]; then
+	# Check if Tweaked BBR is already installed
+	if [[ ! -z "$(lsmod | grep bbrz)" ]]; then
+		warn echo "Tweaked BBR is already installed"
+	else
+		install_ install_bbrz_ "Installing BBRz" "/tmp/bbrz_error" bbrz_install_success
 	fi
 fi
 
@@ -386,7 +413,8 @@ set_txqueuelen_
 # Check for Virtual Environment since some of the tunning might not work on virtual machine
 systemd-detect-virt > /dev/null
 if [ \$? -eq 0 ]; then
-	:
+	#disable_tso_
+	sleep 1s
 else
 	set_disk_scheduler_
 	set_ring_buffer_
@@ -451,9 +479,16 @@ if [[ ! -z "$bbrx_install_success" ]]; then
 	info "BBRx successfully installed, please reboot for it to take effect"
 fi
 
+if [[ ! -z "$bbry_install_success" ]]; then
+	info "BBRy successfully installed, please reboot for it to take effect"
+fi
+
+if [[ ! -z "$bbrz_install_success" ]]; then
+	info "BBRz successfully installed, please reboot for it to take effect"
+fi
+
 if [[ ! -z "$bbrv3_install_success" ]]; then
 	info "BBRv3 successfully installed, please reboot for it to take effect"
 fi
 
 exit 0
-
