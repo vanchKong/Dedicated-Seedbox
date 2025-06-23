@@ -24,12 +24,12 @@ trap BLA::stop_loading_animation SIGINT
 install_() {
 info_2 "$2"
 BLA::start_loading_animation "${BLA_classic[@]}"
-$1 1> /dev/null 2> $3
+eval "$1" 1> /dev/null 2> "$3"
 if [ $? -ne 0 ]; then
 	fail_3 "FAIL" 
 else
 	info_3 "Successful"
-	export $4=1
+	export "$4"=1
 fi
 BLA::stop_loading_animation
 }
@@ -87,8 +87,11 @@ if [[ "$OS" =~ "Ubuntu" ]]; then #Ubuntu 20.04+ are supported
 	fi
 fi
 
+# 初始化 qb_suffix_cli 变量
+qb_suffix_cli=""
+
 ## Read input arguments
-while getopts "u:p:c:q:l:rbvxyz3oh" opt; do
+while getopts "u:p:c:q:l:s:rbvxyz3oh" opt; do # 添加了 :s 来支持 qb_suffix
   case ${opt} in
 	u ) # process option username
 		username=${OPTARG}
@@ -123,6 +126,9 @@ while getopts "u:p:c:q:l:rbvxyz3oh" opt; do
 			warn "You must choose a qBittorrent version for your libtorrent install"
 			qb_ver_choose
 		fi
+		;;
+	s ) # process option qb_suffix
+		qb_suffix_cli=${OPTARG}
 		;;
 	r ) # process option autoremove
 		autoremove_install=1
@@ -207,8 +213,8 @@ while getopts "u:p:c:q:l:rbvxyz3oh" opt; do
 		;;
 	h ) # process option help
 		info "Help:"
-		info "Usage: ./Install.sh -u <username> -p <password> -c <Cache Size(unit:MiB)> -q <qBittorrent version> -l <libtorrent version> -b -v -r -3 -x -p"
-		info "Example: ./Install.sh -u SAGIRIxr -p 1LDw39VOgors -c 3072 -q 4.3.9 -l v1.2.19 -b -v -r -3"
+		info "Usage: ./Install.sh -u <username> -p <password> -c <Cache Size(unit:MiB)> -q <qBittorrent version> -l <libtorrent version> -s <qb_suffix> -b -v -r -3 -x -p"
+		info "Example: ./Install.sh -u SAGIRIxr -p 1LDw39VOgors -c 3072 -q 4.3.9 -l v1.2.19 -s x64_v3 -b -v -r -3"
 		source <(wget -qO- https://raw.githubusercontent.com/SAGIRIxr/Seedbox-Components/main/Torrent%20Clients/qBittorrent/qBittorrent_install.sh)
 		seperator
 		info "Options:"
@@ -222,21 +228,24 @@ while getopts "u:p:c:q:l:rbvxyz3oh" opt; do
 		echo -e "\n"
 		need_input "5. -l : libtorrent version"
 		need_input "Available qBittorrent versions:"
-		tput sgr0; tput setaf 7; tput dim; history -p "${lib_ver_list[@]}"; tput sgr0
+		tput sgr0; tput setaf 7; tput dim; history -p "${lib_name_list[@]}"; tput sgr0 # 修正为 lib_name_list
 		echo -e "\n"
-		need_input "6. -r : Install autoremove-torrents"
-		need_input "7. -b : Install autobrr"
-		need_input "8. -v : Install vertex"
-		need_input "9. -x : Install BBRx"
-		need_input "10. -3 : Install BBRv3"
-		need_input "11. -p : Specify ports for qBittorrent, autobrr and vertex"
-		need_input "12. -h : Display help message"
+		need_input "6. -s : qBittorrent version suffix (e.g., x64_v3)" # 新增说明
+		need_input "7. -r : Install autoremove-torrents"
+		need_input "8. -b : Install autobrr"
+		need_input "9. -v : Install vertex"
+		need_input "10. -x : Install BBRx"
+		need_input "11. -y : Install BBRy" # 补全 BBRy/BBRz
+		need_input "12. -z : Install BBRz"
+		need_input "13. -3 : Install BBRv3"
+		need_input "14. -o : Specify ports for qBittorrent, autobrr and vertex"
+		need_input "15. -h : Display help message"
 		exit 0
 		;;
 	\? ) 
 		info "Help:"
-		info_2 "Usage: ./Install.sh -u <username> -p <password> -c <Cache Size(unit:MiB)> -q <qBittorrent version> -l <libtorrent version> -b -v -r -3 -x -p"
-		info_2 "Example ./Install.sh -u SAGIRIxr -p 1LDw39VOgors -c 3072 -q 4.3.9 -l v1.2.19 -b -v -r -3"
+		info_2 "Usage: ./Install.sh -u <username> -p <password> -c <Cache Size(unit:MiB)> -q <qBittorrent version> -l <libtorrent version> -s <qb_suffix> -b -v -r -3 -x -p"
+		info_2 "Example ./Install.sh -u SAGIRIxr -p 1LDw39VOgors -c 3072 -q 4.3.9 -l v1.2.19 -s x64_v3 -b -v -r -3"
 		exit 1
 		;;
 	esac
@@ -253,6 +262,7 @@ echo -e "\n"
 
 
 # qBittorrent
+# 引入 qBittorrent 安装脚本，使其函数可用
 source <(wget -qO- https://raw.githubusercontent.com/SAGIRIxr/Seedbox-Components/main/Torrent%20Clients/qBittorrent/qBittorrent_install.sh)
 # Check if qBittorrent install is successfully loaded
 if [ $? -ne 0 ]; then
@@ -274,15 +284,15 @@ if [[ ! -z "$qb_install" ]]; then
 		read password
 	fi
 	## Create user if it does not exist
-	if ! id -u $username > /dev/null 2>&1; then
-		useradd -m -s /bin/bash $username
+	if ! id -u "$username" > /dev/null 2>&1; then
+		useradd -m -s /bin/bash "$username"
 		# Check if the user is created successfully
 		if [ $? -ne 0 ]; then
 			warn "Failed to create user $username"
 			return 1
 		fi
 	fi
-	chown -R $username:$username /home/$username
+	chown -R "$username":"$username" "/home/$username"
 	#Check if cache is specified
 	if [ -z "$cache" ]; then
 		warn "Cache is not specified"
@@ -299,17 +309,22 @@ if [[ ! -z "$qb_install" ]]; then
 				break
 			fi
 		done
-		qb_cache=$cache
+		qb_cache="$cache"
 	fi
 	#Check if qBittorrent version is specified
 	if [ -z "$qb_ver" ]; then
 		warn "qBittorrent version is not specified"
-		qb_ver_check
+		qb_ver_choose
 	fi
 	#Check if libtorrent version is specified
 	if [ -z "$lib_ver" ]; then
 		warn "libtorrent version is not specified"
-		lib_ver_check
+		lib_ver_choose # 使用 lib_ver_choose
+	fi
+	#Check if qb_suffix is specified
+	if [ -z "$qb_suffix_cli" ]; then # 检查命令行参数是否提供
+		warn "qBittorrent suffix is not specified via -s. Will prompt for selection."
+		qb_suffix_choose # 调用 qBittorrent_install.sh 中定义的函数
 	fi
 	#Check if qBittorrent port is specified
 	if [ -z "$qb_port" ]; then
@@ -324,31 +339,32 @@ if [[ ! -z "$qb_install" ]]; then
 	qb_install_check
 
 	## qBittorrent install
-	install_ "install_qBittorrent_ $username $password $qb_ver $lib_ver $qb_cache $qb_port $qb_incoming_port" "Installing qBittorrent" "/tmp/qb_error" qb_install_success
+	# 确保所有参数都被正确引用
+	install_ "install_qBittorrent_ \"$username\" \"$password\" \"$qb_ver\" \"$lib_ver\" \"$qb_cache\" \"$qb_port\" \"$qb_incoming_port\" \"$qb_suffix_cli\"" "Installing qBittorrent" "/tmp/qb_error" qb_install_success
 fi
 
 # autobrr Install
 if [[ ! -z "$autobrr_install" ]]; then
-	install_ install_autobrr_ "Installing autobrr" "/tmp/autobrr_error" autobrr_install_success
+	install_ "install_autobrr_" "Installing autobrr" "/tmp/autobrr_error" autobrr_install_success
 fi
 
 # vertex Install
 if [[ ! -z "$vertex_install" ]]; then
-	install_ install_vertex_ "Installing vertex" "/tmp/vertex_error" vertex_install_success
+	install_ "install_vertex_" "Installing vertex" "/tmp/vertex_error" vertex_install_success
 fi
 
 # autoremove-torrents Install
 if [[ ! -z "$autoremove_install" ]]; then
-	install_ install_autoremove-torrents_ "Installing autoremove-torrents" "/tmp/autoremove_error" autoremove_install_success
+	install_ "install_autoremove-torrents_" "Installing autoremove-torrents" "/tmp/autoremove_error" autoremove_install_success
 fi
 
 seperator
 
 ## Tunning
 info "Start Doing System Tunning"
-install_ tuned_ "Installing tuned" "/tmp/tuned_error" tuned_success
-install_ set_txqueuelen_ "Setting txqueuelen" "/tmp/txqueuelen_error" txqueuelen_success
-install_ set_file_open_limit_ "Setting File Open Limit" "/tmp/file_open_limit_error" file_open_limit_success
+install_ "tuned_" "Installing tuned" "/tmp/tuned_error" tuned_success
+install_ "set_txqueuelen_" "Setting txqueuelen" "/tmp/txqueuelen_error" txqueuelen_success
+install_ "set_file_open_limit_" "Setting File Open Limit" "/tmp/file_open_limit_error" file_open_limit_success
 
 # Check for Virtual Environment since some of the tunning might not work on virtual machine
 systemd-detect-virt > /dev/null
@@ -356,11 +372,11 @@ if [ $? -eq 0 ]; then
 	warn "Virtualization is detected, skipping some of the tunning"
 	#install_ disable_tso_ "Disabling TSO" "/tmp/tso_error" tso_success
 else
-	install_ set_disk_scheduler_ "Setting Disk Scheduler" "/tmp/disk_scheduler_error" disk_scheduler_success
-	install_ set_ring_buffer_ "Setting Ring Buffer" "/tmp/ring_buffer_error" ring_buffer_success
+	install_ "set_disk_scheduler_" "Setting Disk Scheduler" "/tmp/disk_scheduler_error" disk_scheduler_success
+	install_ "set_ring_buffer_" "Setting Ring Buffer" "/tmp/ring_buffer_error" ring_buffer_success
 fi
-install_ set_initial_congestion_window_ "Setting Initial Congestion Window" "/tmp/initial_congestion_window_error" initial_congestion_window_success
-install_ kernel_settings_ "Setting Kernel Settings" "/tmp/kernel_settings_error" kernel_settings_success
+install_ "set_initial_congestion_window_" "Setting Initial Congestion Window" "/tmp/initial_congestion_window_error" initial_congestion_window_success
+install_ "kernel_settings_" "Setting Kernel Settings" "/tmp/kernel_settings_error" kernel_settings_success
 
 info "Delay 10 seconds"
 sleep 10s
@@ -369,33 +385,33 @@ sleep 10s
 if [[ ! -z "$bbrx_install" ]]; then
 	# Check if Tweaked BBR is already installed
 	if [[ ! -z "$(lsmod | grep bbrx)" ]]; then
-		warn echo "Tweaked BBR is already installed"
+		warn "Tweaked BBR is already installed"
 	else
-		install_ install_bbrx_ "Installing BBRx" "/tmp/bbrx_error" bbrx_install_success
+		install_ "install_bbrx_" "Installing BBRx" "/tmp/bbrx_error" bbrx_install_success
 	fi
 fi
 
 if [[ ! -z "$bbry_install" ]]; then
 	# Check if Tweaked BBR is already installed
 	if [[ ! -z "$(lsmod | grep bbry)" ]]; then
-		warn echo "Tweaked BBR is already installed"
+		warn "Tweaked BBR is already installed"
 	else
-		install_ install_bbry_ "Installing BBRy" "/tmp/bbry_error" bbry_install_success
+		install_ "install_bbry_" "Installing BBRy" "/tmp/bbry_error" bbry_install_success
 	fi
 fi
 
 if [[ ! -z "$bbrz_install" ]]; then
 	# Check if Tweaked BBR is already installed
 	if [[ ! -z "$(lsmod | grep bbrz)" ]]; then
-		warn echo "Tweaked BBR is already installed"
+		warn "Tweaked BBR is already installed"
 	else
-		install_ install_bbrz_ "Installing BBRz" "/tmp/bbrz_error" bbrz_install_success
+		install_ "install_bbrz_" "Installing BBRz" "/tmp/bbrz_error" bbrz_install_success
 	fi
 fi
 
 # BBRv3
 if [[ ! -z "$bbrv3_install" ]]; then
-	install_ install_bbrv3_ "Installing BBRv3" "/tmp/bbrv3_error" bbrv3_install_success
+	install_ "install_bbrv3_" "Installing BBRv3" "/tmp/bbrv3_error" bbrv3_install_success
 fi
 
 ## Configue Boot Script
