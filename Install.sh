@@ -321,10 +321,11 @@ if [[ ! -z "$qb_install" ]]; then
 		warn "libtorrent version is not specified"
 		lib_ver_choose # 使用 lib_ver_choose
 	fi
-	#Check if qb_suffix is specified
-	if [ -z "$qb_suffix_cli" ]; then # 检查命令行参数是否提供
-		warn "qBittorrent suffix is not specified via -s. Will prompt for selection."
-		qb_suffix_choose # 调用 qBittorrent_install.sh 中定义的函数
+# 新增：根据 qb_suffix_cli 决定 qb_suffix 的值，不再交互式询问
+	if [ -n "$qb_suffix_cli" ]; then # 如果通过 -s 提供了 qb_suffix
+		qb_suffix="$qb_suffix_cli"
+	else
+		qb_suffix="" # 如果没有提供 -s，则 qb_suffix 为空
 	fi
 	#Check if qBittorrent port is specified
 	if [ -z "$qb_port" ]; then
