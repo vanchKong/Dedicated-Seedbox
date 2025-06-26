@@ -521,6 +521,8 @@ fi
 if [[ ! -z "$fb_install_success" ]]; then
 	info "Filebrowser installed"
 	boring_text "Filebrowser WebUI: http://$publicip:$fb_port"
+ 	boring_text "qBittorrent Username: admin"
+	boring_text "qBittorrent Password: admin"
 	echo -e "\n"
 fi
 # BBR
