@@ -200,9 +200,6 @@ while getopts "u:p:c:q:l:s:rbvxyz3ohf" opt; do
 			done
 		fi
 
-		# 您放置的调试行在这里，这是正确的位置
-		echo "DEBUG: vertex_install 变量状态: '$vertex_install'" 
-
 		if [[ -n "$vertex_install" ]]; then
 			need_input "Please enter vertex port:"
 			read vertex_port
