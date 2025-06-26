@@ -91,7 +91,7 @@ fi
 qb_suffix_cli=""
 
 ## Read input arguments
-while getopts "u:p:c:q:l:s:rbvxyz3oh" opt; do # 添加了 :s 来支持 qb_suffix
+while getopts "u:p:c:q:l:s:rbvxyz3ohf" opt; do
   case ${opt} in
 	u ) # process option username
 		username=${OPTARG}
@@ -129,6 +129,9 @@ while getopts "u:p:c:q:l:s:rbvxyz3oh" opt; do # 添加了 :s 来支持 qb_suffix
 		;;
 	s ) # process option qb_suffix
 		qb_suffix_cli=${OPTARG}
+		;;
+        f ) # process option filebrowser
+		fb_install=1
 		;;
 	r ) # process option autoremove
 		autoremove_install=1
@@ -210,6 +213,20 @@ while getopts "u:p:c:q:l:s:rbvxyz3oh" opt; do # 添加了 :s 来支持 qb_suffix
 				fi
 			done
 		fi
+		if [[ -n "$fb_install" ]]; then # 新增 Filebrowser 端口逻辑
+			need_input "Please enter Filebrowser port:"
+			read fb_port
+			while true
+			do
+				if ! [[ "$fb_port" =~ ^[0-9]+$ ]]; then
+					warn "Port must be a number"
+					need_input "Please enter Filebrowser port:"
+					read fb_port
+				else
+					break
+				fi
+			done
+		fi
 		;;
 	h ) # process option help
 		info "Help:"
@@ -238,8 +255,9 @@ while getopts "u:p:c:q:l:s:rbvxyz3oh" opt; do # 添加了 :s 来支持 qb_suffix
 		need_input "11. -y : Install BBRy" # 补全 BBRy/BBRz
 		need_input "12. -z : Install BBRz"
 		need_input "13. -3 : Install BBRv3"
-		need_input "14. -o : Specify ports for qBittorrent, autobrr and vertex"
-		need_input "15. -h : Display help message"
+		need_input "14. -f : Install Filebrowser"
+		need_input "15. -o : Specify ports for qBittorrent, autobrr, vertex and filebrowser"
+		need_input "16. -h : Display help message"
 		exit 0
 		;;
 	\? ) 
@@ -358,7 +376,14 @@ fi
 if [[ ! -z "$autoremove_install" ]]; then
 	install_ "install_autoremove-torrents_" "Installing autoremove-torrents" "/tmp/autoremove_error" autoremove_install_success
 fi
-
+# Filebrowser Install # 新增 Filebrowser 安装块
+if [[ ! -z "$fb_install" ]]; then
+	# 检查并设置默认端口，如果用户没有通过 -o 指定
+	if [ -z "$fb_port" ]; then
+		fb_port=8082
+	fi
+	install_ "install_fb_" "Installing Filebrowser" "/tmp/fb_error" fb_install_success
+fi
 seperator
 
 ## Tunning
@@ -489,6 +514,12 @@ if [[ ! -z "$vertex_install_success" ]]; then
 	boring_text "vertex WebUI: http://$publicip:$vertex_port"
 	boring_text "vertex Username: $username"
 	boring_text "vertex Password: $password"
+	echo -e "\n"
+fi
+# Filebrowser
+if [[ ! -z "$fb_install_success" ]]; then
+	info "Filebrowser installed"
+	boring_text "Filebrowser WebUI: http://$publicip:$fb_port"
 	echo -e "\n"
 fi
 # BBR
