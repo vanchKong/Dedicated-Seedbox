@@ -2,7 +2,7 @@
 tput sgr0; clear
 
 ## Load Seedbox Components
-source <(wget -qO- https://raw.githubusercontent.com/SAGIRIxr/Seedbox-Components/main/seedbox_installation.sh)
+source <(wget -qO- https://raw.githubusercontent.com/vanchKong/Seedbox-Components/main/seedbox_installation.sh)
 # Check if Seedbox Components is successfully loaded
 if [ $? -ne 0 ]; then
 	echo "Component ~Seedbox Components~ failed to load"
@@ -11,7 +11,7 @@ if [ $? -ne 0 ]; then
 fi
 
 ## Load loading animation
-source <(wget -qO- https://raw.githubusercontent.com/Silejonu/bash_loading_animations/main/bash_loading_animations.sh)
+source <(wget -qO- https://raw.githubusercontent.com/vanchKong/bash_loading_animations/main/bash_loading_animations.sh)
 # Check if bash loading animation is successfully loaded
 if [ $? -ne 0 ]; then
 	fail "Component ~Bash loading animation~ failed to load"
@@ -233,7 +233,7 @@ while getopts "u:p:c:q:l:s:rbvxyz3ohf" opt; do
 		info "Help:"
 		info "Usage: ./Install.sh -u <username> -p <password> -c <Cache Size(unit:MiB)> -q <qBittorrent version> -l <libtorrent version> -s <qb_suffix> -b -v -r -3 -x -p"
 		info "Example: ./Install.sh -u SAGIRIxr -p 1LDw39VOgors -c 3072 -q 4.3.9 -l v1.2.19 -s x64_v3 -b -v -r -3"
-		source <(wget -qO- https://raw.githubusercontent.com/SAGIRIxr/Seedbox-Components/main/Torrent%20Clients/qBittorrent/qBittorrent_install.sh)
+		source <(wget -qO- https://raw.githubusercontent.com/vanchKong/Seedbox-Components/main/Torrent%20Clients/qBittorrent/qBittorrent_install.sh)
 		seperator
 		info "Options:"
 		need_input "1. -u : Username"
@@ -282,7 +282,7 @@ echo -e "\n"
 
 # qBittorrent
 # 引入 qBittorrent 安装脚本，使其函数可用
-source <(wget -qO- https://raw.githubusercontent.com/SAGIRIxr/Seedbox-Components/main/Torrent%20Clients/qBittorrent/qBittorrent_install.sh)
+source <(wget -qO- https://raw.githubusercontent.com/vanchKong/Seedbox-Components/main/Torrent%20Clients/qBittorrent/qBittorrent_install.sh)
 # Check if qBittorrent install is successfully loaded
 if [ $? -ne 0 ]; then
 	fail_exit "Component ~qBittorrent install~ failed to load"
@@ -405,7 +405,7 @@ fi
 install_ "set_initial_congestion_window_" "Setting Initial Congestion Window" "/tmp/initial_congestion_window_error" initial_congestion_window_success
 install_ "kernel_settings_" "Setting Kernel Settings" "/tmp/kernel_settings_error" kernel_settings_success
 
-info "Delay 10 seconds"
+info "Delay 10 秒之前"
 sleep 10s
 
 # BBRx
@@ -437,7 +437,7 @@ if [[ ! -z "$bbrz_install" ]]; then
 fi
 
 # BBRv3
-if [[ ! -z "$bbrv3_install" ]]; then
+if [[ ! -z "$bbrv3_install" ]]; 键，然后
 	install_ "install_bbrv3_" "Installing BBRv3" "/tmp/bbrv3_error" bbrv3_install_success
 fi
 
@@ -447,7 +447,7 @@ touch /root/.boot-script.sh && chmod +x /root/.boot-script.sh
 cat << EOF > /root/.boot-script.sh
 #!/bin/bash
 sleep 120s
-source <(wget -qO- https://raw.githubusercontent.com/SAGIRIxr/Seedbox-Components/main/seedbox_installation.sh)
+source <(wget -qO- https://raw.githubusercontent.com/vanchKong/Seedbox-Components/main/seedbox_installation.sh)
 # Check if Seedbox Components is successfully loaded
 if [ \$? -ne 0 ]; then
 	exit 1
